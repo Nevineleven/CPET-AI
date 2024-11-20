@@ -2,7 +2,12 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 
-def feature_pruning(features: pd.DataFrame, time: pd.Series, time_interval:int = 5, freq_cut: float = 95/5, unique_cut: float = 0.1):
+def feature_pruning(features: pd.DataFrame, 
+                    time: pd.Series, 
+                    time_interval:int = 5, 
+                    freq_cut: float = 95/5, 
+                    unique_cut: float = 0.1,
+                    none_freq: float = 0.35):
     start_at_zero = []
     interp_times = []
 
@@ -21,7 +26,7 @@ def feature_pruning(features: pd.DataFrame, time: pd.Series, time_interval:int =
         for col in feature_copy.columns:
             cell = np.array(row[col])
             if len(list(filter(None, cell))) == 0:
-                row[col] = []
+                row[col] = np.nan
             else:
                 count_vals = pd.Series(cell).value_counts().to_list()
                 if len(count_vals) <= 1:
@@ -32,8 +37,11 @@ def feature_pruning(features: pd.DataFrame, time: pd.Series, time_interval:int =
                     to_drop = False
                 else:
                     to_drop = True
+
                 if to_drop:
-                    row[col] = []
+                    row[col] = np.nan
+                else:
+                    row[col] = cell
             try:
                 y = cell.astype(float) 
                 y_cubic = interp1d(x, y, kind='cubic', bounds_error=False, fill_value=y[[0]])
@@ -43,6 +51,9 @@ def feature_pruning(features: pd.DataFrame, time: pd.Series, time_interval:int =
 
             except ValueError:
                 continue  
+    for col in feature_copy.columns:
+        if (feature_copy[col].isna().sum() / len(feature_copy[col])) >= none_freq:
+            feature_copy = feature_copy.drop(col, axis=1)
     feature_copy['interpolated_time'] = interp_times
     feature_copy['time_start_at_zero'] = start_at_zero
     return feature_copy
