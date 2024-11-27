@@ -56,4 +56,5 @@ def feature_pruning(features: pd.DataFrame,
             feature_copy = feature_copy.drop(col, axis=1)
     feature_copy['interpolated_time'] = interp_times
     feature_copy['time_start_at_zero'] = start_at_zero
+    
     return feature_copy

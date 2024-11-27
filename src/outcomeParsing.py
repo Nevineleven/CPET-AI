@@ -13,4 +13,4 @@ def mergeDataOutcome(data_with_mrn: pd.DataFrame,
     time_in_sec = time_in_days * 86400
     data_and_outcomes = pd.merge(data_with_mrn, death_data, on=['MRN'], how='left')
     data_and_outcomes['Death'] = ((data_and_outcomes['death_date'] - data_and_outcomes['time_of_test']).dt.total_seconds() <= time_in_sec).astype(int)
-    return data_and_outcomes
+    return data_and_outcomes.drop_duplicates(keep='last')
